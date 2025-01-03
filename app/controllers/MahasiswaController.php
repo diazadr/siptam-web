@@ -1,57 +1,85 @@
 <?php
 include_once 'app/models/MahasiswaModel.php';
 
-class MahasiswaController {
+class MahasiswaController
+{
     private $model;
 
-    public function __construct($db) {
+    public function __construct($db)
+    {
         $this->model = new MahasiswaModel($db);
     }
 
-    public function index() {
+    public function index()
+    {
+        // Digunakan oleh Admin atau Koordinator untuk melihat semua mahasiswa
         $result = $this->model->getAll();
         include 'app/views/mahasiswa/index.php';
     }
 
-    public function create() {
+    public function create()
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->model->nama = $_POST['nama'];
-            $this->model->nim = $_POST['nim'];
-            $this->model->username = $_POST['username'];
-            $this->model->password = $_POST['password'];
-            $this->model->email = $_POST['email'];
-            $this->model->no_telepon = $_POST['no_telepon'];
-            if ($this->model->create()) {
+            $data = [
+                'user_id' => $_POST['user_id'],
+                'nim' => $_POST['nim'],
+                'jurusan' => $_POST['jurusan'],
+                'semester_active' => $_POST['semester_active']
+            ];
+            if ($this->model->createMahasiswa($data)) {
                 header("Location: /siptam/mahasiswa");
                 exit;
             }
         }
-        include 'app/views/mahasiswa/tambah.php';
+        // Ambil data pengguna dengan role "mahasiswa"
+        $mahasiswaUsers = $this->model->getUsersByRole('mahasiswa');
+        include 'app/views/mahasiswa/create.php';
+    }
+    public function searchUsers()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['q'])) {
+            $keyword = $_GET['q'];
+            $users = $this->model->searchUsersByEmailOrName($keyword, 'mahasiswa');
+
+            // Kembalikan hasil dalam format JSON
+            header('Content-Type: application/json');
+            echo json_encode($users);
+            exit;
+        }
     }
 
-    public function edit($id) {
+    public function edit($id)
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->model->id = $id;
-            $this->model->nama = $_POST['nama'];
-            $this->model->nim = $_POST['nim'];
-            $this->model->username = $_POST['username'];
-            $this->model->password = $_POST['password'];
-            $this->model->email = $_POST['email'];
-            $this->model->no_telepon = $_POST['no_telepon'];
-            if ($this->model->update()) {
+            $data = [
+                'user_id' => $_POST['user_id'],
+                'nim' => $_POST['nim'],
+                'jurusan' => $_POST['jurusan'],
+                'semester_active' => $_POST['semester_active']
+            ];
+
+            if ($this->model->updateMahasiswa($id, $data)) {
                 header("Location: /siptam/mahasiswa");
                 exit;
             }
         }
-        $mahasiswa = $this->model->getById($id);
+
+        $mahasiswa = $this->model->getMahasiswaById($id);
+
+        if (!$mahasiswa) {
+            header("Location: /siptam/mahasiswa?error=not_found");
+            exit;
+        }
+
         include 'app/views/mahasiswa/edit.php';
     }
 
-    public function delete($id) {
-        $this->model->id = $id;
-        if ($this->model->delete()) {
+    public function delete($id)
+    {
+        if ($this->model->deleteMahasiswa($id)) {
             header("Location: /siptam/mahasiswa");
             exit;
         }
     }
 }
+?>

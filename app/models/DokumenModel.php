@@ -1,59 +1,32 @@
 <?php
 class DokumenModel {
     private $conn;
-    private $table = 'dokumen';
-
-    public $id;
-    public $id_tugas_akhir;
-    public $nama_dokumen;
-    public $path;
+    private $table = 'dokumens';
 
     public function __construct($db) {
         $this->conn = $db;
     }
 
-    public function getAll() {
-        $query = "SELECT * FROM " . $this->table;
+    public function getDokumenByType($mahasiswa_id, $type) {
+        $query = "SELECT * FROM $this->table WHERE mahasiswa_id = ? AND dokumen_type = ?";
         $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $mahasiswa_id, PDO::PARAM_INT);
+        $stmt->bindParam(2, $type, PDO::PARAM_STR);
         $stmt->execute();
-        return $stmt;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getById($id) {
-        $query = "SELECT * FROM " . $this->table . " WHERE id = ?";
+    public function createDokumen($data) {
+        $query = "INSERT INTO $this->table (mahasiswa_id, kegiatan_id, dokumen_type, file_path, status, upload_date) 
+                  VALUES (:mahasiswa_id, :kegiatan_id, :dokumen_type, :file_path, :status, :upload_date)";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $id);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
 
-    public function create() {
-        $query = "INSERT INTO " . $this->table . " 
-                  (id_tugas_akhir, nama_dokumen, path) 
-                  VALUES (:id_tugas_akhir, :nama_dokumen, :path)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id_tugas_akhir', $this->id_tugas_akhir);
-        $stmt->bindParam(':nama_dokumen', $this->nama_dokumen);
-        $stmt->bindParam(':path', $this->path);
-        return $stmt->execute();
-    }
-
-    public function update() {
-        $query = "UPDATE " . $this->table . " 
-                  SET id_tugas_akhir = :id_tugas_akhir, nama_dokumen = :nama_dokumen, path = :path 
-                  WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id_tugas_akhir', $this->id_tugas_akhir);
-        $stmt->bindParam(':nama_dokumen', $this->nama_dokumen);
-        $stmt->bindParam(':path', $this->path);
-        $stmt->bindParam(':id', $this->id);
-        return $stmt->execute();
-    }
-
-    public function delete() {
-        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $this->id);
+        $stmt->bindParam(':mahasiswa_id', $data['mahasiswa_id']);
+        $stmt->bindParam(':kegiatan_id', $data['kegiatan_id']);
+        $stmt->bindParam(':dokumen_type', $data['dokumen_type']);
+        $stmt->bindParam(':file_path', $data['file_path']);
+        $stmt->bindParam(':status', $data['status']);
+        $stmt->bindParam(':upload_date', $data['upload_date']);
         return $stmt->execute();
     }
 }

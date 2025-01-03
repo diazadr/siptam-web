@@ -6,39 +6,83 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title text-center">Edit Data Mahasiswa</h4>
-                    <p class="card-description text-center">Form untuk mengedit data Mahasiswa</p>
-                    <form method="POST" action="" class="forms-sample">
-                        <div class="form-group">
-                            <label for="nama">Nama</label>
-                            <input type="text" class="form-control" id="nama" name="nama" placeholder="Nama" value="<?php echo $mahasiswa['nama']; ?>" required>
-                        </div>
+                    <form method="POST" action="<?php echo BASE_URL; ?>mahasiswa/edit/<?php echo $mahasiswa['mahasiswa_id']; ?>" class="forms-sample">
                         <div class="form-group">
                             <label for="nim">NIM</label>
-                            <input type="text" class="form-control" id="nim" name="nim" placeholder="NIM" value="<?php echo $mahasiswa['nim']; ?>" required>
+                            <input type="text" class="form-control" id="nim" name="nim" value="<?php echo $mahasiswa['nim']; ?>" required>
+                        </div>
+                        <div class="form-group position-relative">
+                            <label for="user_email">Email (User)</label>
+                            <input type="text" class="form-control" id="user_email" name="user_email" value="<?php echo $mahasiswa['email']; ?>" placeholder="Ketik untuk mencari email" required>
+                            <input type="hidden" id="user_id" name="user_id" value="<?php echo $mahasiswa['user_id']; ?>">
+                            <div id="user_email_suggestions" class="dropdown-menu"></div>
                         </div>
                         <div class="form-group">
-                            <label for="username">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" placeholder="Username" value="<?php echo $mahasiswa['username']; ?>" required>
+                            <label for="jurusan">Jurusan</label>
+                            <input type="text" class="form-control" id="jurusan" name="jurusan" value="<?php echo $mahasiswa['jurusan']; ?>" required>
                         </div>
                         <div class="form-group">
-                            <label for="password">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="Password" value="<?php echo $mahasiswa['password']; ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" placeholder="Email" value="<?php echo $mahasiswa['email']; ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="no_telepon">No Telepon</label>
-                            <input type="text" class="form-control" id="no_telepon" name="no_telepon" placeholder="No Telepon" value="<?php echo $mahasiswa['no_telepon']; ?>" required>
+                            <label for="semester_active">Semester Aktif</label>
+                            <input type="text" class="form-control" id="semester_active" name="semester_active" value="<?php echo $mahasiswa['semester_active']; ?>" required>
                         </div>
                         <button type="submit" class="btn btn-primary mr-2">Update</button>
-                        <a href="index.php" class="btn btn-light">Kembali</a>
+                        <a href="<?php echo BASE_URL; ?>mahasiswa" class="btn btn-light">Kembali</a>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    const userInput = document.getElementById('user_email');
+    const suggestions = document.getElementById('user_email_suggestions');
+
+    userInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        if (query.length < 2) {
+            suggestions.innerHTML = '';
+            suggestions.classList.remove('show');
+            return;
+        }
+
+        fetch(`/siptam/searchUsers?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                suggestions.innerHTML = '';
+                if (data.length === 0) {
+                    const noResult = document.createElement('div');
+                    noResult.classList.add('dropdown-item', 'text-muted');
+                    noResult.textContent = 'Tidak ada hasil';
+                    suggestions.appendChild(noResult);
+                } else {
+                    data.forEach(user => {
+                        const option = document.createElement('a');
+                        option.classList.add('dropdown-item');
+                        option.textContent = user.email;
+                        option.dataset.userId = user.user_id;
+                        option.style.cursor = 'pointer';
+                        option.addEventListener('click', function() {
+                            userInput.value = this.textContent;
+                            document.getElementById('user_id').value = this.dataset.userId;
+                            suggestions.innerHTML = '';
+                            suggestions.classList.remove('show');
+                        });
+                        suggestions.appendChild(option);
+                    });
+                }
+                suggestions.classList.add('show');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!userInput.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.classList.remove('show');
+        }
+    });
+</script>
 
 <?php include 'app/templates/footer.php'; ?>

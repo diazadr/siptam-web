@@ -8,54 +8,31 @@ class DokumenController {
         $this->model = new DokumenModel($db);
     }
 
-    // Display all documents
-    public function index() {
-        $result = $this->model->getAll();
-        include 'app/views/dokumen/index.php';
+    // Menampilkan dokumen berdasarkan jenis (proposal, laporan, revisi)
+    public function listByType($mahasiswa_id, $type) {
+        // Digunakan oleh Mahasiswa dan Dosen untuk melihat dokumen tertentu
+        $dokumens = $this->model->getDokumenByType($mahasiswa_id, $type);
+        include 'app/views/dokumen/list_type.php';
     }
 
-    // Add a new document
-    public function create() {
+    // Mengunggah dokumen baru
+    public function upload() {
+        // Digunakan oleh Mahasiswa untuk mengunggah dokumen tugas akhir
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->model->id_tugas_akhir = $_POST['id_tugas_akhir'];
-            $this->model->nama_dokumen = $_POST['nama_dokumen'];
-            $this->model->path = $_POST['path'];
-            if ($this->model->create()) {
+            $data = [
+                'mahasiswa_id' => $_POST['mahasiswa_id'],
+                'kegiatan_id' => $_POST['kegiatan_id'],
+                'dokumen_type' => $_POST['dokumen_type'],
+                'file_path' => $_POST['file_path'], // Path file yang diunggah
+                'status' => 'menunggu',            // Status default dokumen
+                'upload_date' => date('Y-m-d H:i:s')
+            ];
+            if ($this->model->createDokumen($data)) {
                 header("Location: /dokumen");
                 exit;
             }
         }
-        include 'app/views/dokumen/create.php';
-    }
-
-    // Edit an existing document
-    public function edit($id) {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->model->id = $id;
-            $this->model->id_tugas_akhir = $_POST['id_tugas_akhir'];
-            $this->model->nama_dokumen = $_POST['nama_dokumen'];
-            $this->model->path = $_POST['path'];
-            if ($this->model->update()) {
-                header("Location: /dokumen");
-                exit;
-            }
-        }
-        $dokumen = $this->model->getById($id);
-        include 'app/views/dokumen/edit.php';
-    }
-
-    // Delete a document by ID
-    public function delete($id) {
-        $this->model->id = $id;
-        if ($this->model->delete()) {
-            header("Location: /dokumen");
-            exit;
-        }
-    }
-
-    // View a specific document by ID
-    public function view($id) {
-        $dokumen = $this->model->getById($id);
-        include 'app/views/dokumen/view.php';
+        include 'app/views/dokumen/upload.php';
     }
 }
+?>

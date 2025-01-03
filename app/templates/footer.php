@@ -2,9 +2,10 @@
 </div> <!-- main-panel -->
 </div> <!-- page-body-wrapper -->
 </div>
-<!
+
+
   <!-- container-scroller -->
- 
+
 
   <!-- plugins:js -->
   <script src="<?php echo BASE_URL; ?>public/assets/vendors/js/vendor.bundle.base.js"></script>

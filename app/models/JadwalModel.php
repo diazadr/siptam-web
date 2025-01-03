@@ -1,103 +1,41 @@
 <?php
-class JadwalModel
-{
+class JadwalModel {
     private $conn;
-    private $table = 'jadwal';
+    private $table = 'jadwals';
 
-    public $id;
-    public $id_tugas_akhir;
-    public $jenis;
-    public $tanggal;
-    public $waktu;
-    public $tempat;
-
-    public function __construct($db)
-    {
+    public function __construct($db) {
         $this->conn = $db;
     }
 
-    // Mendapatkan semua jadwal
-    public function getAll()
-    {
-        // try {
-        //     $query = "SELECT * FROM " . $this->table;
-        //     $stmt = $this->conn->prepare($query);
-        //     $stmt->execute();
-        //     return $stmt->fetchAll(PDO::FETCH_ASSOC); // Mengembalikan array asosiatif
-        // } catch (Exception $e) {
-        //     throw new Exception("Error fetching all jadwal: " . $e->getMessage());
-        // }
-        $query = "SELECT * FROM " . $this->table;
+    public function createJadwal($data) {
+        $query = "INSERT INTO $this->table (mahasiswa_id, kegiatan_id, type, tanggal, waktu, lokasi, status) 
+                  VALUES (:mahasiswa_id, :kegiatan_id, :type, :tanggal, :waktu, :lokasi, :status)";
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bindParam(':mahasiswa_id', $data['mahasiswa_id']);
+        $stmt->bindParam(':kegiatan_id', $data['kegiatan_id']);
+        $stmt->bindParam(':type', $data['type']);
+        $stmt->bindParam(':tanggal', $data['tanggal']);
+        $stmt->bindParam(':waktu', $data['waktu']);
+        $stmt->bindParam(':lokasi', $data['lokasi']);
+        $stmt->bindParam(':status', $data['status']);
+        return $stmt->execute();
+    }
+
+    public function getUpcomingJadwal($user_id) {
+        $query = "SELECT * FROM $this->table WHERE mahasiswa_id = ? AND status = 'dijadwalkan' ORDER BY tanggal ASC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(1, $user_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getJadwalCount() {
+        $query = "SELECT COUNT(*) as jadwal_count FROM " . $this->table;
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
-        return $stmt;
-    }
-
-    // Mendapatkan jadwal berdasarkan ID
-    public function getById($id)
-    {
-        try {
-            $query = "SELECT * FROM " . $this->table . " WHERE id = ?";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(1, $id);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            throw new Exception("Error fetching jadwal by ID: " . $e->getMessage());
-        }
-    }
-
-    // Menambahkan jadwal baru
-    public function create()
-    {
-        try {
-            $query = "INSERT INTO " . $this->table . " 
-                      (id_tugas_akhir, jenis, tanggal, waktu, tempat) 
-                      VALUES (:id_tugas_akhir, :jenis, :tanggal, :waktu, :tempat)";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id_tugas_akhir', $this->id_tugas_akhir);
-            $stmt->bindParam(':jenis', $this->jenis);
-            $stmt->bindParam(':tanggal', $this->tanggal);
-            $stmt->bindParam(':waktu', $this->waktu);
-            $stmt->bindParam(':tempat', $this->tempat);
-            return $stmt->execute();
-        } catch (Exception $e) {
-            throw new Exception("Error inserting jadwal: " . $e->getMessage());
-        }
-    }
-
-    // Memperbarui jadwal yang ada
-    public function update()
-    {
-        try {
-            $query = "UPDATE " . $this->table . " 
-                      SET id_tugas_akhir = :id_tugas_akhir, jenis = :jenis, 
-                          tanggal = :tanggal, waktu = :waktu, tempat = :tempat 
-                      WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id_tugas_akhir', $this->id_tugas_akhir);
-            $stmt->bindParam(':jenis', $this->jenis);
-            $stmt->bindParam(':tanggal', $this->tanggal);
-            $stmt->bindParam(':waktu', $this->waktu);
-            $stmt->bindParam(':tempat', $this->tempat);
-            $stmt->bindParam(':id', $this->id);
-            return $stmt->execute();
-        } catch (Exception $e) {
-            throw new Exception("Error updating jadwal: " . $e->getMessage());
-        }
-    }
-
-    // Menghapus jadwal berdasarkan ID
-    public function delete()
-    {
-        try {
-            $query = "DELETE FROM " . $this->table . " WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $this->id);
-            return $stmt->execute();
-        } catch (Exception $e) {
-            throw new Exception("Error deleting jadwal: " . $e->getMessage());
-        }
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['jadwal_count'];
     }
 }
-
+?>
